@@ -56,20 +56,34 @@ func entropyRegister(b wazero.HostModuleBuilder, _ ext.Cell) error {
 			if err := msgpack.Unmarshal(data, &req); err != nil {
 				return 3
 			}
-			if req.N == 0 {
-				return 4
-			}
-			if req.N > maxEntropyBytes {
-				return 5
-			}
-			buf := make([]byte, req.N)
-			if _, err := rand.Read(buf); err != nil {
-				return 6
+			buf, code := readEntropy(req.N)
+			if code != 0 {
+				return code
 			}
 			return writeResp(ctx, m, entropyReadResponse{Bytes: buf}, respPtrOut, respLenOut)
 		}).
 		Export("entropy_read")
 	return nil
+}
+
+// readEntropy validates the requested length and returns n bytes drawn
+// from crypto/rand. It is the testable core of the entropy_read host
+// import — the wazero closure above only adds memory I/O around it.
+// Returns a non-zero host error code on failure:
+//
+//	4 = n == 0, 5 = n > maxEntropyBytes, 6 = crypto/rand failed.
+func readEntropy(n uint32) ([]byte, uint32) {
+	if n == 0 {
+		return nil, 4
+	}
+	if n > maxEntropyBytes {
+		return nil, 5
+	}
+	buf := make([]byte, n)
+	if _, err := rand.Read(buf); err != nil {
+		return nil, 6
+	}
+	return buf, 0
 }
 
 func entropyStub(b wazero.HostModuleBuilder, _ ext.Cell) error {
