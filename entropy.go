@@ -29,6 +29,7 @@ const maxEntropyBytes = 1 << 16 // 64 KiB per call — generous but capped.
 func init() {
 	ext.Register(ext.Capability{
 		Name:     "entropy.read",
+		Provider: "github.com/BananaLabs-OSS/Pulp-ext-entropy",
 		Register: entropyRegister,
 		Stub:     entropyStub,
 	})

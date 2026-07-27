@@ -30,6 +30,9 @@ func TestCapabilityRegistered(t *testing.T) {
 	if found == nil {
 		t.Fatal("entropy.read capability was not registered via init()")
 	}
+	if got, want := found.Provider, "github.com/BananaLabs-OSS/Pulp-ext-entropy"; got != want {
+		t.Fatalf("entropy.read provider = %q, want exact module identity %q", got, want)
+	}
 	if found.Register == nil {
 		t.Error("entropy.read has no Register (active binding)")
 	}
